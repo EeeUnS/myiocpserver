@@ -16,6 +16,7 @@ constexpr int MAX_WORKERTHREAD = 4;
 
 enum class IOOperation
 {
+	NONE = 0,
 	RECV,
 	SEND
 };
@@ -80,7 +81,7 @@ private:
 
 	void acceptorThread();
 
-	bool bindRecv(stClientInfo* pClientInfo);
+	bool beginRecv(stClientInfo* pClientInfo);
 
 	void createClient(const UINT32 maxClientCount);
 

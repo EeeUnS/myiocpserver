@@ -1,11 +1,11 @@
 #include "IOCompletionPort.hpp"
 
- IOCompletionPort::~IOCompletionPort()
+IOCompletionPort::~IOCompletionPort()
 {
 	WSACleanup();
 }
 
- bool IOCompletionPort::InitSocket()
+bool IOCompletionPort::InitSocket()
 {
 	WSADATA wsaData;
 
@@ -33,7 +33,7 @@
 	return true;
 }
 
- bool IOCompletionPort::BindandListen(int nBindPort)
+bool IOCompletionPort::BindandListen(int nBindPort)
 {
 	SOCKADDR_IN stServerAddr;
 	stServerAddr.sin_family = AF_INET;
@@ -64,7 +64,7 @@
 	return true;
 }
 
- bool IOCompletionPort::StartServer(const UINT32 maxClientCount)
+bool IOCompletionPort::StartServer(const UINT32 maxClientCount)
 {
 	createClient(maxClientCount);
 
@@ -94,7 +94,7 @@
 	std::cout << "Server Start" << std::endl;
 }
 
- void IOCompletionPort::DestroyThread()
+void IOCompletionPort::DestroyThread()
 {
 	mIsWorkerRun = false;
 	CloseHandle(mIOCPHandle);
@@ -116,9 +116,9 @@
 	}
 }
 
- stClientInfo* IOCompletionPort::getEmptyClientInfo()
+stClientInfo* IOCompletionPort::getEmptyClientInfoOrNull()
 {
-	for (auto& client : mClientInfos)
+	for (stClientInfo& client : mClientInfos)
 	{
 		if (INVALID_SOCKET == client.m_socketClient)
 		{
@@ -128,9 +128,12 @@
 	return nullptr;
 }
 
- bool IOCompletionPort::bindIOCompletionPort(stClientInfo* pClientInfo)
+bool IOCompletionPort::bindIOCompletionPort(stClientInfo* pClientInfo)
 {
-	auto hIOCP = CreateIoCompletionPort((HANDLE)pClientInfo->m_socketClient, mIOCPHandle, (ULONG_PTR)pClientInfo, 0);
+	ASSERT(pClientInfo->m_socketClient != NULL);
+	ASSERT(pClientInfo->m_socketClient != INVALID_SOCKET);
+
+	HANDLE hIOCP = CreateIoCompletionPort((HANDLE)pClientInfo->m_socketClient, mIOCPHandle, (ULONG_PTR)pClientInfo, 0);
 
 	if (hIOCP == nullptr || mIOCPHandle != hIOCP)
 	{
@@ -140,18 +143,18 @@
 	return true;
 }
 
- void IOCompletionPort::ioworkerthread()
+void IOCompletionPort::ioworkerthread()
 {
 	stClientInfo* pClientInfo = NULL;
 
-	BOOL bSuccess = true;
+	BOOL isSuccess = true;
 
 	DWORD dwIOSize = 0;
 	LPOVERLAPPED lpOverlapped = NULL;
 
 	while (mIsWorkerRun)
 	{
-		bSuccess = GetQueuedCompletionStatus(
+		isSuccess = GetQueuedCompletionStatus(
 			mIOCPHandle,
 			&dwIOSize,
 			(PULONG_PTR)&pClientInfo,
@@ -160,7 +163,7 @@
 		);
 
 		//사용자 쓰레드 종료 메세지 처리..
-		if (true == bSuccess && 0 == dwIOSize && NULL == lpOverlapped)
+		if (true == isSuccess && 0 == dwIOSize && NULL == lpOverlapped)
 		{
 			mIsWorkerRun = false;
 			continue;
@@ -172,7 +175,7 @@
 			continue;
 		}
 
-		if (false == bSuccess || (0 == dwIOSize && true == bSuccess))
+		if (false == isSuccess || (0 == dwIOSize && true == isSuccess))
 		{
 			std::cout << "Socket(" << (int)pClientInfo->m_socketClient << ") 접속 끊김" << std::endl;
 			closeSocket(pClientInfo);
@@ -180,16 +183,18 @@
 		}
 
 		stOverlappedEx* pOverlappedEx = (stOverlappedEx*)lpOverlapped;
+		ASSERT((pOverlappedEx->m_eOperation == IOOperation::RECV) || (pOverlappedEx->m_eOperation == IOOperation::SEND));
 
 		if (IOOperation::RECV == pOverlappedEx->m_eOperation)
 		{
 			pOverlappedEx->m_szBuf[dwIOSize] = NULL;
-			printf("[수산] bytes : %d, msg %s\n", dwIOSize, pOverlappedEx->m_szBuf);
+			printf("[수신] bytes : %d, msg %s\n", dwIOSize, pOverlappedEx->m_szBuf);
 
 			//Echo
-			sendMsg(pClientInfo, pOverlappedEx->m_szBuf, dwIOSize);
+			bool isSendSuccess = sendMsg(pClientInfo, pOverlappedEx->m_szBuf, dwIOSize);
+			ASSERT(isSendSuccess);
 			//recv...
-			bindRecv(pClientInfo);
+			beginRecv(pClientInfo);
 		}
 
 		else if (IOOperation::SEND == pOverlappedEx->m_eOperation)
@@ -204,7 +209,7 @@
 	}
 }
 
- bool IOCompletionPort::sendMsg(stClientInfo* pClientInfo, char* pMsg, int nLen)
+bool IOCompletionPort::sendMsg(stClientInfo* pClientInfo, char* pMsg, int nLen)
 {
 	DWORD dwRecvNumBytes = 0;
 
@@ -239,7 +244,7 @@
 	return true;
 }
 
- void IOCompletionPort::closeSocket(stClientInfo* pClientInfo, bool bIsForce)
+void IOCompletionPort::closeSocket(stClientInfo* pClientInfo, bool bIsForce)
 {
 	struct linger stlinger = { 0,0 };
 
@@ -257,14 +262,14 @@
 	pClientInfo->m_socketClient = INVALID_SOCKET;
 }
 
- void IOCompletionPort::acceptorThread()
+void IOCompletionPort::acceptorThread()
 {
 	SOCKADDR_IN stClientAddr;
 	int nAddrLen = sizeof(SOCKADDR_IN);
 
 	while (mIsAccepterRun)
 	{
-		stClientInfo* pClientInfo = getEmptyClientInfo();
+		stClientInfo* pClientInfo = getEmptyClientInfoOrNull();
 		if (pClientInfo == nullptr)
 		{
 			std::cout << "Client Full" << std::endl;
@@ -285,7 +290,7 @@
 			return;
 		}
 
-		bRet = bindRecv(pClientInfo);
+		bRet = beginRecv(pClientInfo);
 		if (!bRet)
 		{
 			return;
@@ -298,7 +303,7 @@
 	}
 }
 
- bool IOCompletionPort::bindRecv(stClientInfo* pClientInfo)
+bool IOCompletionPort::beginRecv(stClientInfo* pClientInfo)
 {
 	DWORD dwFlag = 0;
 	DWORD dwRecvNumBytes = 0;
@@ -313,7 +318,9 @@
 		&dwRecvNumBytes,
 		&dwFlag,
 		(LPWSAOVERLAPPED) & (pClientInfo->m_stRecvOverlappedEx),
-		NULL);
+		NULL
+	);
+
 	if (nRet = SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
 	{
 		ASSERT(false);
@@ -330,7 +337,7 @@
 	return true;
 }
 
- void IOCompletionPort::createClient(const UINT32 maxClientCount)
+void IOCompletionPort::createClient(const UINT32 maxClientCount)
 {
 	for (UINT32 i = 0; i < maxClientCount; ++i)
 	{
@@ -338,7 +345,7 @@
 	}
 }
 
- bool IOCompletionPort::createIOWorkerThread()
+bool IOCompletionPort::createIOWorkerThread()
 {
 	for (int i = 0; i < MAX_WORKERTHREAD; ++i)
 	{
@@ -348,7 +355,7 @@
 	return true;
 }
 
- bool IOCompletionPort::createAcceptorThread()
+bool IOCompletionPort::createAcceptorThread()
 {
 	mAccepterThread = std::thread([this]() {acceptorThread(); });
 

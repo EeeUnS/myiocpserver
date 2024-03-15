@@ -11,7 +11,7 @@ int main()
 	IOCompletionPort ioCompletionPort;
 
 	ioCompletionPort.InitSocket();
-	DEBUGBREAK;
+	//DEBUGBREAK;
 	ioCompletionPort.BindandListen(SERVER_PORT);
 
 	ioCompletionPort.StartServer(MAX_CLIENT);
