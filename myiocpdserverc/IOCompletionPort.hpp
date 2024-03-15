@@ -26,7 +26,6 @@ struct stOverlappedEx
 	WSAOVERLAPPED m_wsaOverlapped;
 	SOCKET m_socketClient;
 	WSABUF m_wsaBuf;
-	char m_szBuf[MAX_SOCKBUF];
 	IOOperation m_eOperation;
 };
 
@@ -35,6 +34,8 @@ struct stClientInfo
 	SOCKET m_socketClient;
 	stOverlappedEx m_stRecvOverlappedEx;
 	stOverlappedEx m_stSendOverlappedEx;
+	char m_szSendBuf[MAX_SOCKBUF];
+	char m_szRecvBuf[MAX_SOCKBUF];
 
 	stClientInfo()
 	{
@@ -69,7 +70,7 @@ private:
 	bool mIsWorkerRun = true;
 	bool mIsAccepterRun = true;
 
-	stClientInfo* getEmptyClientInfo();
+	stClientInfo* getEmptyClientInfoOrNull();
 
 	bool bindIOCompletionPort(stClientInfo* pClientInfo);
 

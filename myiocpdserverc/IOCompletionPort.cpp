@@ -185,13 +185,18 @@ void IOCompletionPort::ioworkerthread()
 		stOverlappedEx* pOverlappedEx = (stOverlappedEx*)lpOverlapped;
 		ASSERT((pOverlappedEx->m_eOperation == IOOperation::RECV) || (pOverlappedEx->m_eOperation == IOOperation::SEND));
 
+		ASSERT((pOverlappedEx->m_eOperation == IOOperation::RECV) && (&pClientInfo->m_stRecvOverlappedEx == pOverlappedEx)
+			|| (pOverlappedEx->m_eOperation == IOOperation::SEND) && (&pClientInfo->m_stSendOverlappedEx == pOverlappedEx)
+		);
+
+
 		if (IOOperation::RECV == pOverlappedEx->m_eOperation)
 		{
-			pOverlappedEx->m_szBuf[dwIOSize] = NULL;
-			printf("[수신] bytes : %d, msg %s\n", dwIOSize, pOverlappedEx->m_szBuf);
+			pClientInfo->m_szRecvBuf[dwIOSize] = NULL;
+			printf("[수신] bytes : %d, msg %s\n", dwIOSize, pClientInfo->m_szRecvBuf);
 
 			//Echo
-			bool isSendSuccess = sendMsg(pClientInfo, pOverlappedEx->m_szBuf, dwIOSize);
+			bool isSendSuccess = sendMsg(pClientInfo, pClientInfo->m_szRecvBuf, dwIOSize);
 			ASSERT(isSendSuccess);
 			//recv...
 			beginRecv(pClientInfo);
@@ -199,7 +204,7 @@ void IOCompletionPort::ioworkerthread()
 
 		else if (IOOperation::SEND == pOverlappedEx->m_eOperation)
 		{
-			printf("[송신] bytes : %d, msg : %s\n", dwIOSize, pOverlappedEx->m_szBuf);
+			printf("[송신] bytes : %d, msg : %s\n", dwIOSize, pClientInfo->m_szSendBuf);
 		}
 		else
 		{
@@ -213,10 +218,13 @@ bool IOCompletionPort::sendMsg(stClientInfo* pClientInfo, char* pMsg, int nLen)
 {
 	DWORD dwRecvNumBytes = 0;
 
-	CopyMemory(pClientInfo->m_stSendOverlappedEx.m_szBuf, pMsg, nLen);
+	ASSERT(strlen(pClientInfo->m_szSendBuf) >= nLen);
+	ASSERT(strlen(pMsg) >= nLen);
+
+	CopyMemory(pClientInfo->m_szSendBuf, pMsg, nLen);
 
 	pClientInfo->m_stSendOverlappedEx.m_wsaBuf.len = nLen;
-	pClientInfo->m_stSendOverlappedEx.m_wsaBuf.buf = pClientInfo->m_stSendOverlappedEx.m_szBuf;
+	pClientInfo->m_stSendOverlappedEx.m_wsaBuf.buf = pClientInfo->m_szSendBuf;
 	pClientInfo->m_stSendOverlappedEx.m_eOperation = IOOperation::SEND;
 
 	int nRet = WSASend(
@@ -309,7 +317,7 @@ bool IOCompletionPort::beginRecv(stClientInfo* pClientInfo)
 	DWORD dwRecvNumBytes = 0;
 
 	pClientInfo->m_stRecvOverlappedEx.m_wsaBuf.len = MAX_SOCKBUF;
-	pClientInfo->m_stRecvOverlappedEx.m_wsaBuf.buf = pClientInfo->m_stRecvOverlappedEx.m_szBuf;
+	pClientInfo->m_stRecvOverlappedEx.m_wsaBuf.buf = pClientInfo->m_szRecvBuf;
 	pClientInfo->m_stRecvOverlappedEx.m_eOperation = IOOperation::RECV;
 
 	int nRet = WSARecv(pClientInfo->m_socketClient,
