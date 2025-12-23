@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="myiocpserver/myiocpserver.vcxproj" Id="42009556-6664-4851-9c4f-e9b297ea5c10" />
+</Solution>

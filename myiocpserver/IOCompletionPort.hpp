@@ -1,18 +1,11 @@
 #pragma once
 #pragma comment (lib, "ws2_32")
 
-#define ASSERT( _val) { if (!_val) { DebugBreak();}}
-#define DEBUGBREAK ASSERT(false)
-
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
-#include <iostream>
-#include <wchar.h>
-#include <vector>
-#include <thread>
 
-constexpr int MAX_SOCKBUF = 1024;
-constexpr int MAX_WORKERTHREAD = 4;
+enum { MAX_SOCKBUF = _4k }; // 4kB
+enum { MAX_WORKERTHREAD = 4 };
 
 enum class IOOperation
 {

@@ -1,13 +1,18 @@
+#include "pch.h"
 #include "IOCompletionPort.hpp"
-#include <map>
-#include <iostream>
-#include <array>
+#include "CExceptionFilter.h"
 
-constexpr UINT16 SERVER_PORT = 11021;
-constexpr UINT16 MAX_CLIENT = 100;
+
+enum { SERVER_PORT = 11021 };
+enum { MAX_CLIENT = 100 };
+
+typedef ULONGLONG ptr;
+
 
 int main()
 {
+	CExceptionFilter::SetExceptionFilter();
+
 	IOCompletionPort ioCompletionPort;
 
 	ioCompletionPort.InitSocket();
@@ -16,9 +21,6 @@ int main()
 
 	ioCompletionPort.StartServer(MAX_CLIENT);
 
-	getchar();
-
 	ioCompletionPort.DestroyThread();
-
 	return 0;
 }

@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "IOCompletionPort.hpp"
+#include "DebugHelper.h"
 
 IOCompletionPort::~IOCompletionPort()
 {
@@ -147,7 +149,7 @@ void IOCompletionPort::ioworkerthread()
 {
 	stClientInfo* pClientInfo = NULL;
 
-	BOOL isSuccess = true;
+	bool isSuccess = true;
 
 	DWORD dwIOSize = 0;
 	LPOVERLAPPED lpOverlapped = NULL;
