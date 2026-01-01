@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "CThread.h"
+#include "Thread.h"
 #include <process.h>
 #include "DebugHelper.h"
 

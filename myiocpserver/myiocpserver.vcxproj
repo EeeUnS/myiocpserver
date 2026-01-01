@@ -135,12 +135,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CCallStack.cpp" />
-    <ClCompile Include="CExceptionFilter.cpp" />
-    <ClCompile Include="CLock.cpp" />
-    <ClCompile Include="CLogger.cpp" />
-    <ClCompile Include="CSingleton.cpp" />
-    <ClCompile Include="CThread.cpp" />
+    <ClCompile Include="CallStack.cpp" />
+    <ClCompile Include="ExceptionFilter.cpp" />
+    <ClCompile Include="Lock.cpp" />
+    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="Singleton.cpp" />
+    <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="IOCompletionPort.cpp" />
     <ClCompile Include="myiocpserver.cpp" />
@@ -152,15 +152,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CCallStack.h" />
-    <ClInclude Include="CExceptionFilter.h" />
-    <ClInclude Include="CLock.h" />
-    <ClInclude Include="CLogger.h" />
-    <ClInclude Include="CThread.h" />
+    <ClInclude Include="CallStack.h" />
+    <ClInclude Include="ExceptionFilter.h" />
+    <ClInclude Include="Lock.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="Thread.h" />
     <ClInclude Include="DebugHelper.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="IOCompletionPort.hpp" />
-    <ClInclude Include="CSingleton.h" />
+    <ClInclude Include="Singleton.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

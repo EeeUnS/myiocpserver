@@ -21,25 +21,25 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CExceptionFilter.cpp">
+    <ClCompile Include="ExceptionFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CLock.cpp">
+    <ClCompile Include="Lock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CThread.cpp">
+    <ClCompile Include="Thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="IOCompletionPort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CLogger.cpp">
+    <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CSingleton.cpp">
+    <ClCompile Include="Singleton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CCallStack.cpp">
+    <ClCompile Include="CallStack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
@@ -50,13 +50,13 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CExceptionFilter.h">
+    <ClInclude Include="ExceptionFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CThread.h">
+    <ClInclude Include="Thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CLock.h">
+    <ClInclude Include="Lock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DebugHelper.h">
@@ -65,13 +65,13 @@
     <ClInclude Include="IOCompletionPort.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CLogger.h">
+    <ClInclude Include="Logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CSingleton.h">
+    <ClInclude Include="Singleton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CCallStack.h">
+    <ClInclude Include="CallStack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Util.h">

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "CSingleton.h"
+#include "Singleton.h"
 
 CSingletonDestoryChecker g_singletonDestoryChecker;
 

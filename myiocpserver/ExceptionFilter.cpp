@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "CExceptionFilter.h"
+#include "ExceptionFilter.h"
 #include "Util.h"
 #include <Windows.h>
 #include <thread>

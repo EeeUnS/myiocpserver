@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "CLock.h"
+#include "Lock.h"
 #include "DebugHelper.h"
 
 
