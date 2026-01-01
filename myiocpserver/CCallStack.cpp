@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "CCallStack.h"
 #include <windows.h>
 #include <dbghelp.h>

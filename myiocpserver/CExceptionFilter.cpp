@@ -1,5 +1,6 @@
+#include "pch.h"
 #include "CExceptionFilter.h"
-
+#include "Util.h"
 #include <Windows.h>
 #include <thread>
 #include <Dbghelp.h>

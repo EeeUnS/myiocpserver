@@ -7,7 +7,7 @@
 enum { MAX_SOCKBUF = _4k }; // 4kB
 enum { MAX_WORKERTHREAD = 4 };
 
-enum class IOOperation
+enum class eIOOperation
 {
 	NONE = 0,
 	RECV,
@@ -19,7 +19,7 @@ struct stOverlappedEx
 	WSAOVERLAPPED m_wsaOverlapped;
 	SOCKET m_socketClient;
 	WSABUF m_wsaBuf;
-	IOOperation m_eOperation;
+	eIOOperation m_eOperation;
 };
 
 struct stClientInfo
@@ -39,27 +39,31 @@ struct stClientInfo
 };
 
 
-class IOCompletionPort
+class CIOCompletionPort
 {
 public:
-	IOCompletionPort() = default;
-	~IOCompletionPort();
+	CIOCompletionPort() = default;
+	~CIOCompletionPort();
 
 	bool InitSocket();
 
 	bool BindandListen(int nBindPort);
 
-	bool StartServer(const UINT32 maxClientCount);
+	bool StartServer(const UINT32 maxClientCount, int numIOThread);
+
 
 	void DestroyThread();
 
 
 private:
-	HANDLE mIOCPHandle;
 	SOCKET mListenSocket;
 	std::vector<stClientInfo> mClientInfos;
-	std::vector<std::thread> mIOWorkerThreads;
-	std::thread mAccepterThread;
+
+	HANDLE m_hIOCPPort;
+	HANDLE m_hAcceptThread;
+	HANDLE m_hIOThreads[MAX_WORKERTHREAD];
+	int m_numIOThread;
+
 	bool mIsWorkerRun = true;
 	bool mIsAccepterRun = true;
 
@@ -67,19 +71,27 @@ private:
 
 	bool bindIOCompletionPort(stClientInfo* pClientInfo);
 
-	void ioworkerthread();
 
 	bool sendMsg(stClientInfo* pClientInfo, char* pMsg, int nLen);
 
 	void closeSocket(stClientInfo* pClientInfo, bool bIsForce = false);
 
-	void acceptorThread();
+	// Thread Function
+	static unsigned int __stdcall IOWorkerThread(void* param);
+	static unsigned int __stdcall AcceptThread(void* param);
 
 	bool beginRecv(stClientInfo* pClientInfo);
 
 	void createClient(const UINT32 maxClientCount);
 
-	bool createIOWorkerThread();
-
-	bool createAcceptorThread();
+	CACHE_LINE unsigned int		mCurrentSessionCount;
+	
+	//CACHE_LINE unsigned int		mNumAccept;
+	//CACHE_LINE unsigned int		mNumRecv;
+	//CACHE_LINE unsigned int		mNumSend;
+	//CACHE_LINE unsigned int		mMaximumSessionCount;
+	//CACHE_LINE unsigned int		mNumRequestDisconnected;
+	//CACHE_LINE unsigned int		mNumSendQueueFullDisconnected;
+	//CACHE_LINE unsigned int		mNumInvalidSessionDisconnected;
+	//CACHE_LINE unsigned int		mNumLimitSessionCountDisconnected;
 };

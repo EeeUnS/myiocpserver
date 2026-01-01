@@ -29,4 +29,6 @@
 
 #include "DebugHelper.h"
 
+#define CACHE_LINE __declspec(align(64))
+
 #endif //PCH_H
