@@ -31,4 +31,6 @@
 
 #define CACHE_LINE __declspec(align(64))
 
+#pragma warning (error : 5262)
+
 #endif //PCH_H

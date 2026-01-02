@@ -139,6 +139,7 @@
     <ClCompile Include="ExceptionFilter.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="Session.cpp" />
     <ClCompile Include="Singleton.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Util.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="ExceptionFilter.h" />
     <ClInclude Include="Lock.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="Session.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="DebugHelper.h" />
     <ClInclude Include="Util.h" />

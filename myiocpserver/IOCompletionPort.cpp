@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "IOCompletionPort.hpp"
-#include "DebugHelper.h"
+#include "Session.h"
 
 CIOCompletionPort::~CIOCompletionPort()
 {
@@ -82,14 +82,17 @@ bool CIOCompletionPort::StartServer(const UINT32 maxClientCount, int numIOThread
 	for (unsigned int i = 0; i < m_numIOThread; ++i)
 	{
 		m_hIOThreads[i] = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, 0, IOWorkerThread, this, 0, nullptr));
+		ASSERT(m_hIOThreads[i] != nullptr);
 		SetThreadDescription(m_hIOThreads[i], L"IOOverlappedThread");
 	}
 	std::cout << "IO Workerthread begin" << std::endl;
 
 	m_hAcceptThread = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, 0, AcceptThread, this, 0, nullptr));
+	ASSERT(m_hAcceptThread != nullptr);
 	SetThreadDescription(m_hAcceptThread, L"AcceptThread");
 
 	std::cout << "Server Start" << std::endl;
+	return true;
 }
 
 void CIOCompletionPort::DestroyThread()
@@ -102,7 +105,7 @@ void CIOCompletionPort::DestroyThread()
 	}
 	WaitForMultipleObjects(m_numIOThread, m_hIOThreads, true, INFINITE);
 	WaitForSingleObject(m_hAcceptThread, INFINITE);
-	
+
 
 	for (unsigned int i = 0; i < m_numIOThread; ++i)
 	{
@@ -122,9 +125,9 @@ void CIOCompletionPort::DestroyThread()
 
 }
 
-stClientInfo* CIOCompletionPort::getEmptyClientInfoOrNull()
+CSession* CIOCompletionPort::getEmptyClientInfoOrNull()
 {
-	for (stClientInfo& client : mClientInfos)
+	for (CSession& client : mClientInfos)
 	{
 		if (INVALID_SOCKET == client.m_socketClient)
 		{
@@ -134,25 +137,25 @@ stClientInfo* CIOCompletionPort::getEmptyClientInfoOrNull()
 	return nullptr;
 }
 
-bool CIOCompletionPort::bindIOCompletionPort(stClientInfo* pClientInfo)
-{
-	ASSERT(pClientInfo->m_socketClient != NULL);
-	ASSERT(pClientInfo->m_socketClient != INVALID_SOCKET);
-
-	HANDLE hIOCP = CreateIoCompletionPort((HANDLE)pClientInfo->m_socketClient, m_hIOCPPort, (ULONG_PTR)pClientInfo, 0);
-
-	if (hIOCP == nullptr || m_hIOCPPort != hIOCP)
-	{
-		ASSERT(false);
-		return false;
-	}
-	return true;
-}
+//bool CIOCompletionPort::bindIOCompletionPort(stClientInfo* pClientInfo)
+//{
+//	ASSERT(pClientInfo->m_socketClient != NULL);
+//	ASSERT(pClientInfo->m_socketClient != INVALID_SOCKET);
+//
+//	HANDLE hIOCP = CreateIoCompletionPort((HANDLE)pClientInfo->m_socketClient, m_hIOCPPort, (ULONG_PTR)pClientInfo, 0);
+//
+//	if (hIOCP == nullptr || m_hIOCPPort != hIOCP)
+//	{
+//		ASSERT(false);
+//		return false;
+//	}
+//	return true;
+//}
 
 unsigned int __stdcall CIOCompletionPort::IOWorkerThread(void* param)
 {
 	CIOCompletionPort* pThis = (CIOCompletionPort*)param;
-	stClientInfo* pClientInfo = NULL;
+	CSession* pClientInfo = NULL;
 
 	bool isSuccess = true;
 
@@ -189,7 +192,7 @@ unsigned int __stdcall CIOCompletionPort::IOWorkerThread(void* param)
 			continue;
 		}
 
-		stOverlappedEx* pOverlappedEx = (stOverlappedEx*)lpOverlapped;
+		CSession::stOverlappedEx* pOverlappedEx = (CSession::stOverlappedEx*)lpOverlapped;
 		ASSERT((pOverlappedEx->m_eOperation == eIOOperation::RECV) || (pOverlappedEx->m_eOperation == eIOOperation::SEND));
 
 		ASSERT((pOverlappedEx->m_eOperation == eIOOperation::RECV) && (&pClientInfo->m_stRecvOverlappedEx == pOverlappedEx)
@@ -222,7 +225,7 @@ unsigned int __stdcall CIOCompletionPort::IOWorkerThread(void* param)
 	return 0;
 }
 
-bool CIOCompletionPort::sendMsg(stClientInfo* pClientInfo, char* pMsg, int nLen)
+bool CIOCompletionPort::sendMsg(CSession* pClientInfo, char* pMsg, int nLen)
 {
 	DWORD dwRecvNumBytes = 0;
 
@@ -260,7 +263,7 @@ bool CIOCompletionPort::sendMsg(stClientInfo* pClientInfo, char* pMsg, int nLen)
 	return true;
 }
 
-void CIOCompletionPort::closeSocket(stClientInfo* pClientInfo, bool bIsForce)
+void CIOCompletionPort::closeSocket(CSession* pClientInfo, bool bIsForce)
 {
 	struct linger stlinger = { 0,0 };
 
@@ -282,47 +285,47 @@ void CIOCompletionPort::closeSocket(stClientInfo* pClientInfo, bool bIsForce)
 unsigned int __stdcall   CIOCompletionPort::AcceptThread(void* param)
 {
 	CIOCompletionPort* pThis = (CIOCompletionPort*)param;
-	SOCKADDR_IN stClientAddr;
-	int nAddrLen = sizeof(SOCKADDR_IN);
 
 	while (pThis->mIsAccepterRun)
 	{
-		stClientInfo* pClientInfo = pThis->getEmptyClientInfoOrNull();
+		CSession* pClientInfo = pThis->getEmptyClientInfoOrNull();
 		if (pClientInfo == nullptr)
 		{
 			std::cout << "Client Full" << std::endl;
-			ASSERT(false);
-			return -1;
-		}
-		//blocking
-		pClientInfo->m_socketClient = accept(pThis->mListenSocket, (SOCKADDR*)&stClientAddr, &nAddrLen);
-		if (INVALID_SOCKET == pClientInfo->m_socketClient)
-		{
-			continue;
-		}
-
-		bool bRet = pThis->bindIOCompletionPort(pClientInfo);
-		if (!bRet)
-		{
 			DEBUGBREAK;
 			return -1;
 		}
+		//blocking
 
-		bRet = pThis->beginRecv(pClientInfo);
-		if (!bRet)
-		{
-			return -1;
-		}
+		int nAddrLen = sizeof(SOCKADDR_IN);
+		SOCKADDR_IN clientAddr;
+		pClientInfo->m_socketClient = accept(pThis->mListenSocket, (SOCKADDR*)&clientAddr, &nAddrLen);
+		ASSERT(pClientInfo->m_socketClient != INVALID_SOCKET);
 
 		char clientIP[32] = { 0, };
-		inet_ntop(AF_INET, &(stClientAddr.sin_addr), clientIP, 32 - 1);
-		std::cout << "클라이언트 접속 : IP(" << clientIP << ") SOCKET(" << (int)pClientInfo->m_socketClient << ")" << std::endl;
+		inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIP, 32 - 1);
+		int nPort = ntohs(clientAddr.sin_port);
+		unsigned long nIp = ntohl(clientAddr.sin_addr.S_un.S_addr);
 
+		pClientInfo->m_nIp = nIp;
+		pClientInfo->m_nPort = nPort;
+
+		ASSERT(pClientInfo->m_socketClient != NULL);
+		ASSERT(pClientInfo->m_socketClient != INVALID_SOCKET);
+
+		//bindIOCompletionPort
+		HANDLE hIOCP = CreateIoCompletionPort((HANDLE)pClientInfo->m_socketClient, pThis->m_hIOCPPort, (ULONG_PTR)pClientInfo, 0);
+		ASSERT(hIOCP != nullptr || pThis->m_hIOCPPort == hIOCP)
+
+		bool bRet = pThis->beginRecv(pClientInfo);
+		ASSERT(bRet);
+
+		std::cout << "클라이언트 접속 : IP(" << clientIP << ") SOCKET(" << (int)pClientInfo->m_socketClient << ")" << std::endl;
 	}
 	return 0;
 }
 
-bool CIOCompletionPort::beginRecv(stClientInfo* pClientInfo)
+bool CIOCompletionPort::beginRecv(CSession* pClientInfo)
 {
 	DWORD dwFlag = 0;
 	DWORD dwRecvNumBytes = 0;
@@ -340,21 +343,36 @@ bool CIOCompletionPort::beginRecv(stClientInfo* pClientInfo)
 		NULL
 	);
 
-	if (nRet = SOCKET_ERROR && (WSAGetLastError() != ERROR_IO_PENDING))
+	//에러 목록은 Util::WSARecvError 참고
+	if (nRet == SOCKET_ERROR)
 	{
-		ASSERT(false);
-		wchar_t* s = NULL;
-		FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL, WSAGetLastError(),
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			(LPWSTR)&s, 0, NULL);
-		printf("[에러] WSARecv() 함수 실패 : %d %S\n", WSAGetLastError(), s);
-		LocalFree(s);
-		return false;
+		// ERROR_IO_PENDING : 정상, 비동기 처리중
+		int errorCode = WSAGetLastError();// != ERROR_IO_PENDING
+		switch (errorCode)
+		{
+		case WSA_IO_PENDING:
+			// 정상, 비동기 처리중
+			break;
+		case WSAECONNABORTED: [[fallthrough]];
+		case WSAECONNRESET: [[fallthrough]];
+		case WSAEDISCON: [[fallthrough]];
+		case WSAESHUTDOWN:
+			// 클라이언트 접속 끊김
+			// SetDisconnect
+			break;
+		default:
+			// 그외 에러
+			// 사실 할 수 있는건 없다 로그를 남기고 연결을 끊는다.
+			std::cout << "WSARecv 실패 코드 : " << errorCode << " IP : " << pClientInfo->m_nIp << " port : " << pClientInfo->m_nPort << std::endl;
+			// SetDisconnect
+			break;
+		}
 	}
 
 	return true;
 }
+
+
 
 void CIOCompletionPort::createClient(const UINT32 maxClientCount)
 {

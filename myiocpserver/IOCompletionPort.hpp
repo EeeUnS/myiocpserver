@@ -3,40 +3,9 @@
 
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
+#include "Session.h"
 
-enum { MAX_SOCKBUF = _4k }; // 4kB
 enum { MAX_WORKERTHREAD = 4 };
-
-enum class eIOOperation
-{
-	NONE = 0,
-	RECV,
-	SEND
-};
-
-struct stOverlappedEx
-{
-	WSAOVERLAPPED m_wsaOverlapped;
-	SOCKET m_socketClient;
-	WSABUF m_wsaBuf;
-	eIOOperation m_eOperation;
-};
-
-struct stClientInfo
-{
-	SOCKET m_socketClient;
-	stOverlappedEx m_stRecvOverlappedEx;
-	stOverlappedEx m_stSendOverlappedEx;
-	char m_szSendBuf[MAX_SOCKBUF];
-	char m_szRecvBuf[MAX_SOCKBUF];
-
-	stClientInfo()
-	{
-		ZeroMemory(&m_stRecvOverlappedEx, sizeof(stOverlappedEx));
-		ZeroMemory(&m_stSendOverlappedEx, sizeof(stOverlappedEx));
-		m_socketClient = INVALID_SOCKET;
-	}
-};
 
 
 class CIOCompletionPort
@@ -57,7 +26,7 @@ public:
 
 private:
 	SOCKET mListenSocket;
-	std::vector<stClientInfo> mClientInfos;
+	std::vector<CSession> mClientInfos;
 
 	HANDLE m_hIOCPPort;
 	HANDLE m_hAcceptThread;
@@ -67,20 +36,17 @@ private:
 	bool mIsWorkerRun = true;
 	bool mIsAccepterRun = true;
 
-	stClientInfo* getEmptyClientInfoOrNull();
+	CSession* getEmptyClientInfoOrNull();
 
-	bool bindIOCompletionPort(stClientInfo* pClientInfo);
+	bool sendMsg(CSession* pClientInfo, char* pMsg, int nLen);
 
-
-	bool sendMsg(stClientInfo* pClientInfo, char* pMsg, int nLen);
-
-	void closeSocket(stClientInfo* pClientInfo, bool bIsForce = false);
+	void closeSocket(CSession* pClientInfo, bool bIsForce = false);
 
 	// Thread Function
 	static unsigned int __stdcall IOWorkerThread(void* param);
 	static unsigned int __stdcall AcceptThread(void* param);
 
-	bool beginRecv(stClientInfo* pClientInfo);
+	bool beginRecv(CSession* pClientInfo);
 
 	void createClient(const UINT32 maxClientCount);
 
