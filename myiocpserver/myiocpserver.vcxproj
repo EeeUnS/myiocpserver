@@ -143,6 +143,7 @@
     <ClCompile Include="Session.cpp" />
     <ClCompile Include="Singleton.cpp" />
     <ClCompile Include="Thread.cpp" />
+    <ClCompile Include="TLSObjectPool.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="IOCompletionPort.cpp" />
     <ClCompile Include="myiocpserver.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="Session.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="DebugHelper.h" />
+    <ClInclude Include="TLSObjectPool.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="IOCompletionPort.hpp" />
     <ClInclude Include="Singleton.h" />
