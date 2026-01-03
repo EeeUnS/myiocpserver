@@ -31,14 +31,14 @@ public:
 template<typename T>
 struct FullSegment : public Segment<T>
 {
-	FullSegment() : Segment<T>(true)
+	FullSegment()
 	{
-		for (T*& item : m_Objects)
+		for (T*& item : Segment::m_Objects)
 		{
 			item = new T();
 		}
 	}
-};
+}; 
 static_assert(sizeof(FullSegment<int>) == sizeof(Segment<int>), "FullSegment and Segment must have the same size.");
 
 
