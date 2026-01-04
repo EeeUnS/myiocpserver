@@ -10,17 +10,19 @@ enum class eIOOperation
 
 struct CSession
 {
-	struct stOverlappedEx
+	struct COverlappedEx
 	{
 		WSAOVERLAPPED m_wsaOverlapped;
 		SOCKET m_socketClient;
 		WSABUF m_wsaBuf;
 		eIOOperation m_eOperation;
 	};
+	static_assert(offsetof(COverlappedEx, m_wsaOverlapped) == 0, "COverlappedEx size is incorrect");
 
 	SOCKET m_socketClient;
-	stOverlappedEx m_stRecvOverlappedEx;
-	stOverlappedEx m_stSendOverlappedEx;
+	COverlappedEx m_RecvOverlappedEx;
+	COverlappedEx m_stSendOverlappedEx;
+
 	char m_szSendBuf[MAX_SOCKBUF];
 	char m_szRecvBuf[MAX_SOCKBUF];
 
@@ -29,8 +31,8 @@ struct CSession
 
 	CSession() : m_nPort(0), m_nIp(0)
 	{
-		ZeroMemory(&m_stRecvOverlappedEx, sizeof(stOverlappedEx));
-		ZeroMemory(&m_stSendOverlappedEx, sizeof(stOverlappedEx));
+		ZeroMemory(&m_RecvOverlappedEx, sizeof(COverlappedEx));
+		ZeroMemory(&m_stSendOverlappedEx, sizeof(COverlappedEx));
 		m_socketClient = INVALID_SOCKET;
 	}
 };

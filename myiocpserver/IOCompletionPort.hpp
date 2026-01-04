@@ -4,6 +4,7 @@
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
 #include "Session.h"
+#include "SocketCallBack.h"
 
 enum { MAX_WORKERTHREAD = 4 };
 
@@ -36,6 +37,8 @@ private:
 	bool mIsWorkerRun = true;
 	bool mIsAccepterRun = true;
 
+	ISocketCallBack* m_callback;
+
 	CSession* getEmptyClientInfoOrNull();
 
 	bool sendMsg(CSession* pClientInfo, char* pMsg, int nLen);
@@ -49,6 +52,7 @@ private:
 	bool beginRecv(CSession* pClientInfo);
 
 	void createClient(const UINT32 maxClientCount);
+
 
 	CACHE_LINE unsigned int		mCurrentSessionCount;
 	

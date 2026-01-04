@@ -350,10 +350,4 @@ public:
 	}
 };
 
-//static CConcurrentStackForPool<int *> g_testList;
-//void test()
-//{
-//	int **p1 = g_testList.PoPorNull();
-//	g_testList.Push(p1);
-//}
 #endif // defined(USING_VECTOR)

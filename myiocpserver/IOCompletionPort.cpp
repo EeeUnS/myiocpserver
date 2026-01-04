@@ -155,16 +155,13 @@ CSession* CIOCompletionPort::getEmptyClientInfoOrNull()
 unsigned int __stdcall CIOCompletionPort::IOWorkerThread(void* param)
 {
 	CIOCompletionPort* pThis = (CIOCompletionPort*)param;
-	CSession* pClientInfo = NULL;
-
-	bool isSuccess = true;
-
-	DWORD dwIOSize = 0;
-	LPOVERLAPPED lpOverlapped = NULL;
-
 	while (pThis->mIsWorkerRun)
 	{
-		isSuccess = GetQueuedCompletionStatus(
+		CSession* pClientInfo = NULL;
+		LPOVERLAPPED lpOverlapped = NULL;
+		DWORD dwIOSize = 0;
+
+		bool isSuccess = GetQueuedCompletionStatus(
 			pThis->m_hIOCPPort,
 			&dwIOSize,
 			(PULONG_PTR)&pClientInfo,
@@ -192,22 +189,28 @@ unsigned int __stdcall CIOCompletionPort::IOWorkerThread(void* param)
 			continue;
 		}
 
-		CSession::stOverlappedEx* pOverlappedEx = (CSession::stOverlappedEx*)lpOverlapped;
+		CSession::COverlappedEx* pOverlappedEx = reinterpret_cast<CSession::COverlappedEx*>(lpOverlapped);
 		ASSERT((pOverlappedEx->m_eOperation == eIOOperation::RECV) || (pOverlappedEx->m_eOperation == eIOOperation::SEND));
 
-		ASSERT((pOverlappedEx->m_eOperation == eIOOperation::RECV) && (&pClientInfo->m_stRecvOverlappedEx == pOverlappedEx)
+		ASSERT((pOverlappedEx->m_eOperation == eIOOperation::RECV) && (&pClientInfo->m_RecvOverlappedEx == pOverlappedEx)
 			|| (pOverlappedEx->m_eOperation == eIOOperation::SEND) && (&pClientInfo->m_stSendOverlappedEx == pOverlappedEx)
 		);
 
 
 		if (eIOOperation::RECV == pOverlappedEx->m_eOperation)
 		{
-			pClientInfo->m_szRecvBuf[dwIOSize] = NULL;
-			printf("[수신] bytes : %d, msg %s\n", dwIOSize, pClientInfo->m_szRecvBuf);
+			//pClientInfo->m_szRecvBuf[dwIOSize] = NULL;
+			//printf("[수신] bytes : %d, msg %s\n", dwIOSize, pClientInfo->m_szRecvBuf);
 
-			//Echo
-			bool isSendSuccess = pThis->sendMsg(pClientInfo, pClientInfo->m_szRecvBuf, dwIOSize);
-			ASSERT(isSendSuccess);
+			////Echo
+			//bool isSendSuccess = pThis->sendMsg(pClientInfo, pClientInfo->m_szRecvBuf, dwIOSize);
+			//ASSERT(isSendSuccess);
+
+			{ // 패킷 조립 및 처리
+
+
+			}
+
 			//recv...
 			pThis->beginRecv(pClientInfo);
 		}
@@ -330,16 +333,16 @@ bool CIOCompletionPort::beginRecv(CSession* pClientInfo)
 	DWORD dwFlag = 0;
 	DWORD dwRecvNumBytes = 0;
 
-	pClientInfo->m_stRecvOverlappedEx.m_wsaBuf.len = MAX_SOCKBUF;
-	pClientInfo->m_stRecvOverlappedEx.m_wsaBuf.buf = pClientInfo->m_szRecvBuf;
-	pClientInfo->m_stRecvOverlappedEx.m_eOperation = eIOOperation::RECV;
+	pClientInfo->m_RecvOverlappedEx.m_wsaBuf.len = MAX_SOCKBUF;
+	pClientInfo->m_RecvOverlappedEx.m_wsaBuf.buf = pClientInfo->m_szRecvBuf;
+	pClientInfo->m_RecvOverlappedEx.m_eOperation = eIOOperation::RECV;
 
 	int nRet = WSARecv(pClientInfo->m_socketClient,
-		&(pClientInfo->m_stRecvOverlappedEx.m_wsaBuf),
+		&(pClientInfo->m_RecvOverlappedEx.m_wsaBuf),
 		1,
 		&dwRecvNumBytes,
 		&dwFlag,
-		(LPWSAOVERLAPPED) & (pClientInfo->m_stRecvOverlappedEx),
+		(LPWSAOVERLAPPED) & (pClientInfo->m_RecvOverlappedEx),
 		NULL
 	);
 
@@ -359,6 +362,7 @@ bool CIOCompletionPort::beginRecv(CSession* pClientInfo)
 		case WSAESHUTDOWN:
 			// 클라이언트 접속 끊김
 			// SetDisconnect
+			std::cout << "[접속 끊김] WSARecv 실패 코드 : " << errorCode << " IP : " << pClientInfo->m_nIp << " port : " << pClientInfo->m_nPort << std::endl;
 			break;
 		default:
 			// 그외 에러
