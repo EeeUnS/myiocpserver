@@ -33,7 +33,7 @@ struct FullSegment : public Segment<T>
 {
 	FullSegment()
 	{
-		for (T*& item : Segment::m_Objects)
+		for (T*& item : Segment<T>::m_Objects)
 		{
 			item = new T();
 		}
