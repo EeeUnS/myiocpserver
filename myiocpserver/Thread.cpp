@@ -45,7 +45,7 @@ void CThread::DestroyThread()
 	m_hThread = NULL;
 }
 
-DWORD CThread::ThreadProc()
+DWORD CThread::FuncImplRun()
 {
 	// override in derived class
 	return 0;
@@ -54,5 +54,5 @@ DWORD CThread::ThreadProc()
 unsigned WINAPI CThread::ThreadFunc(void* lpParam)
 {
 	CThread* pThis = static_cast<CThread*>(lpParam);
-	return pThis->ThreadProc();
+	return pThis->FuncImplRun();
 }

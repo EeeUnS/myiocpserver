@@ -10,7 +10,7 @@ public:
 	bool CreateThread();
 	void DestroyThread();
 protected:
-	virtual DWORD ThreadProc();
+	virtual DWORD FuncImplRun() = 0;
 private:
 	static unsigned WINAPI ThreadFunc(LPVOID lpParam);
 	HANDLE m_hThread;

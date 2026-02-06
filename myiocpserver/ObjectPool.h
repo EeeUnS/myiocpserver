@@ -316,6 +316,7 @@ public:
 	{
 		T* obj = nullptr;
 
+	
 		obj = m_pooledObjects.PoPorNull();
 		for (; obj == nullptr; obj = m_pooledObjects.PoPorNull())
 		{
@@ -331,6 +332,23 @@ public:
 			m_CurrentPoolSize = m_CurrentPoolSize + m_InitialPoolSize;
 			m_pooledObjects.PushMultiple(m_InitialPoolSize);
 		}
+
+
+		//obj = m_pooledObjects.PoPorNull();
+		//for (; obj == nullptr; obj = m_pooledObjects.PoPorNull())
+		//{
+		//	// 기본적으로 이 케이스는 없는것이 이상적이다.
+		//	// m_InitialPoolSize 사이즈 자체를 늘리는것을 고민할법하다.
+		//	// 
+		//	// 루프를 두번 이상 도는건 일반적으로 말이안된다
+		//	// pool이 비어있을 때, 풀을 새로 할당한다
+		//	// 락 대기를 없애기 위해 세팅시엔 락을 잡지않고 지역변수에 세팅한다.
+		//	// 이로 인해, 여러 스레드에서 할당이 추가로 일어날 수 있다
+		//	// 이부분은 고려된 사항이다.
+
+		//	m_CurrentPoolSize = m_CurrentPoolSize + m_InitialPoolSize;
+		//	m_pooledObjects.PushMultiple(m_InitialPoolSize);
+		//}
 
 		++m_inUseCount;
 		// multi-thread환경에서 size가 틀어질수있다

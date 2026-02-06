@@ -1,8 +1,8 @@
 #pragma once
-#include "CSingleton.h"
-#include "CThread.h"
+#include "Singleton.h"
+#include "Thread.h"
 
-class CLogger : public CSingleton<CLogger>, CThread
+class CLogger : public CSingleton<CLogger>, public CThread
 {
 public:
 	CLogger(const CLogger&) = delete;
@@ -11,4 +11,4 @@ public:
 	static void Info(const char* format, ...);
 	static void Error(const char* format, ...);
 	static void Warning(const char* format, ...);
-};
+}; 
