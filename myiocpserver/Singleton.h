@@ -58,7 +58,7 @@ public:
         return *m_pInstance;
     }
 
-private:
+protected:
     static std::unique_ptr<T> m_pInstance;
 };
 
